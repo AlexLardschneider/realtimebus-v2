@@ -7,6 +7,7 @@ const utils = require("../../util/utils");
 const StopFinder = require("../../model/busstop/BusStops");
 const LineUtils = require("../../model/line/LineUtils");
 const CourseFinder = require("../../model/course/Courses");
+const moment = require('moment');
 
 module.exports.stops = function (req, res) {
     return Promise.resolve()
@@ -49,6 +50,40 @@ module.exports.stopsForTrip = function (req, res) {
             res.status(500).jsonp({success: false, error: error})
         })
 };
+
+module.exports.stopTimes = function (req, res) {
+    return Promise.resolve()
+        .then(() => {
+            let outputFormat = config.coordinate_wgs84;
+            let stopFinder = new StopFinder(outputFormat);
+            let errors = utils.validateStopTimes(req.query);
+            let time_from = moment(decodeURIComponent(req.query.datetime_from));
+            let time_to = moment(decodeURIComponent(req.query.datetime_to));
+
+            if (!utils.isEmptyArray(errors)){
+                res.status(400).jsonp({success: false, error: errors})
+            }
+            if(!time_from._isValid){
+                res.status(400).jsonp({success: false, error: "Invalid datetime_from."})   
+            }
+            if(!time_to._isValid){
+                res.status(400).jsonp({success: false, error: "Invalid datetime_to."})   
+            }
+
+            time_from = time_from.utc().format('HH:mm:ss');
+            time_to = time_to.utc().format('HH:mm:ss');
+
+            return stopFinder.getStopsForApp(req.query.trip_id, req.query.stop_ids, time_from, time_to);
+        })
+        .then(stoptimes => {
+            res.status(200).jsonp(stoptimes);
+        })
+        .catch(error => {
+            logger.error(error);
+            res.status(500).jsonp({success: false, error: error})
+        })
+};
+
 
 module.exports.nextBusesAtStop = function (req, res) {
     return Promise.resolve()

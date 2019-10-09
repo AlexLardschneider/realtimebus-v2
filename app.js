@@ -134,6 +134,8 @@ app.group("/geojson", (router) => {
     router.get("/:stop/buses", v1Stops.nextBusesAtStop);
     router.get("/:tripId/stops", v1Stops.stopsForTrip);
 
+    router.get("/stoptimes", v1Stops.stopTimes);
+
     router.get("/lines/all", v1Lines.fetchAllLinesAction);
     router.get("/lines", v1Lines.fetchLinesAction);
 });

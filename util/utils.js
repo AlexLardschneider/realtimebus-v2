@@ -10,6 +10,7 @@ const logger = require('./logger');
 const config = require('../config');
 
 const HttpError = require("./HttpError");
+const moment = require('moment');
 
 
 module.exports.pointFromGeoArray = function (jsonArray) {
@@ -185,4 +186,18 @@ module.exports.isNumber = function (toTest) {
 module.exports.isArray = function (array) {
     // noinspection EqualityComparisonWithCoercionJS
     return array != null && Array.isArray(array)
+};
+
+
+module.exports.validateStopTimes = function (query) {
+    let errors = []
+    if(typeof query.trip_id == 'undefined')
+        errors.push({ "error": "Missing trip_id"});
+    if(typeof query.stop_ids == 'undefined')
+        errors.push({ "error": "Missing at least 1 stop_ids"});
+    if(typeof query.datetime_from == 'undefined')
+        errors.push({ "error": "Missing datetime_from"});
+    if(typeof query.datetime_to == 'undefined')
+        errors.push({ "error": "Missing datetime_to"});
+    return errors;
 };

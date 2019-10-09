@@ -107,4 +107,22 @@ module.exports = class BusStops {
                 return featureList.getFeatureCollection();
             });
     }
+
+    getStopsForApp(tripId, stopIds, timeFrom, timeTo) {
+        const reducer = (accumulator, currentValue) => accumulator + ', '  + currentValue;
+        return Promise.resolve(`
+             select * from (
+                    select * from data.stop_times
+                    where 
+                    trip_id = ${tripId} AND
+                    stop_id IN (${stopIds.reduce(reducer)}) AND
+                    departure_time > '${timeFrom}'
+            ) as filtered 
+            where departure_time < '${timeTo}'
+        `)
+            .then(sql => connection.query(sql))
+            .then(results => { 
+                return results.rows;
+            });
+    }
 };
