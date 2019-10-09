@@ -16,7 +16,7 @@
     "csv": "^4.0.0",
     "csv-parser": "^2.0.0",
     "express": "^4.15.3",
-    "express-basic-auth": "^1.1.1",
+    "express-basic-auth": "^1.1.7",
     "express-fileupload": "^0.1.4",
     "express-group-routes": "^1.1.0",
     "express-zip": "^2.0.1",
