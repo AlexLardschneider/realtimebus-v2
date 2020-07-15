@@ -72,8 +72,10 @@ module.exports.fetchLinesAction = function (req, res) {
 
 module.exports.fetchTrips = function (req, res) {
 
+    let indexedTrips = {};
+
     return Promise.resolve()
-        .then(rows => {
+        .then(() => {
 
             let outputFormat = config.coordinate_wgs84;
             let stopFinder = new StopFinder(outputFormat);
@@ -84,22 +86,45 @@ module.exports.fetchTrips = function (req, res) {
             return stopFinder.getTrips(tripIds);
 
         })
-        .then(rows => {
+        .then(trips => {
 
-            let indexedTrips = {};
+            let outputFormat = config.coordinate_wgs84;
+            let stopFinder = new StopFinder(outputFormat);
 
-            rows.forEach(function (item) {
+            trips.forEach(function (item) {
 
                 let tripId = item.tripId;
 
-                if (indexedTrips[tripId] === undefined)
-                    indexedTrips[tripId] = [];
-
-                indexedTrips[tripId].push(item);
+                indexedTrips[tripId] = {
+                    "line": item.line,
+                    "tripType": item.type,
+                    "variant": item.variant,
+                    "service": item.service,
+                    "stops": []
+                };
 
             });
 
-            res.status(200).jsonp(indexedTrips);
+            return stopFinder.getTripStops(Object.keys(indexedTrips));
+
+        })
+        .then(tripStops => {
+
+            tripStops.forEach(function(item) {
+
+                let tripId = item.tripId;
+
+                item.tripId = undefined;
+                indexedTrips[tripId]['stops'].push(item);
+
+            });
+
+            return indexedTrips;
+
+        })
+        .then(result => {
+
+            res.status(200).jsonp(result);
 
         })
         .catch(error => {

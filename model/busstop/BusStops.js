@@ -110,24 +110,18 @@ module.exports = class BusStops {
 
     getStopsByIds(stopIds) {
         return Promise.resolve(
-            `SELECT ro.onr_typ_nr,
-                ro.ort_nr,
-                ro.ort_name,
-                ro.ort_ref_ort_name,
-                ST_AsGeoJSON(ro.the_geom) as json_geom
+            `SELECT 
+                ro.onr_typ_nr AS type,
+                ro.ort_nr AS id,
+                ro.ort_name AS name,
+                ro.ort_ref_ort_name AS refName,
+                ST_Y(ST_Transform(ro.the_geom, 4326)) AS latitude,
+                ST_X(ST_Transform(ro.the_geom, 4326)) AS longitude
             FROM data.rec_ort AS ro
             WHERE ro.ort_nr IN ('${stopIds.join("','")}')`
         )
         .then(sql => connection.query(sql))
-        .then(results => {
-
-            results.rows.forEach(function (item, idx) {
-                results.rows[idx]['json_geom'] = JSON.parse(item.json_geom);
-            });
-
-            return results.rows;
-
-        });
+        .then(results => results.rows);
     }
 
     getStopsForApp(tripId, stopIds, timeFrom, timeTo) {
@@ -149,6 +143,23 @@ module.exports = class BusStops {
     }
 
     getTrips(tripIds) {
+
+        return Promise.resolve(`
+            SELECT
+                rf.trip AS "tripId",
+                rf.line AS "line",
+                rf.trip_type AS "type",
+                rf.variant AS "variant",
+                rf.service AS "service"
+            FROM data.rec_frt AS rf
+            WHERE rf.trip IN ('${tripIds.join("','")}')
+        `)
+        .then(sql => connection.query(sql))
+        .then(results => results.rows);
+
+    }
+
+    getTripStops(tripIds) {
 
         return Promise.resolve(`
             SELECT
