@@ -108,6 +108,28 @@ module.exports = class BusStops {
             });
     }
 
+    getStopsByIds(stopIds) {
+        return Promise.resolve(
+            `SELECT ro.onr_typ_nr,
+                ro.ort_nr,
+                ro.ort_name,
+                ro.ort_ref_ort_name,
+                ST_AsGeoJSON(ro.the_geom) as json_geom
+            FROM data.rec_ort AS ro
+            WHERE ro.ort_nr IN ('${stopIds.join("','")}')`
+        )
+        .then(sql => connection.query(sql))
+        .then(results => {
+
+            results.rows.forEach(function (item, idx) {
+                results.rows[idx]['json_geom'] = JSON.parse(item.json_geom);
+            });
+
+            return results.rows;
+
+        });
+    }
+
     getStopsForApp(tripId, stopIds, timeFrom, timeTo) {
         const reducer = (accumulator, currentValue) => accumulator + ', '  + currentValue;
         return Promise.resolve(`
@@ -125,9 +147,9 @@ module.exports = class BusStops {
                 return results.rows;
             });
     }
-    
+
     getTrips(tripIds) {
-        
+
         return Promise.resolve(`
             SELECT
                 rf.trip AS "tripId",
@@ -146,7 +168,7 @@ module.exports = class BusStops {
         )
         .then(sql => connection.query(sql))
         .then(results => results.rows);
-        
+
     }
-    
+
 };

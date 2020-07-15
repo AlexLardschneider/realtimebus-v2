@@ -72,50 +72,39 @@ module.exports.fetchLinesAction = function (req, res) {
 
 module.exports.fetchTrips = function (req, res) {
 
-    database.connect()
-        .then(client => {
+    return Promise.resolve()
+        .then(rows => {
 
-            return Promise.resolve()
-                .then(rows => {
+            let outputFormat = config.coordinate_wgs84;
+            let stopFinder = new StopFinder(outputFormat);
 
-                    let outputFormat = config.coordinate_wgs84;
-                    let stopFinder = new StopFinder(outputFormat);
+            let tripIds = req.params.tripIds || {};
+            tripIds = tripIds.split(",");
 
-                    let tripIds = req.params.tripIds || {};
-                    tripIds = tripIds.split(",");
+            return stopFinder.getTrips(tripIds);
 
-                    return stopFinder.getTrips(tripIds);
+        })
+        .then(rows => {
 
-                })
-                .then(rows => {
+            let indexedTrips = {};
 
-                    let indexedTrips = {};
+            rows.forEach(function (item) {
 
-                    rows.forEach(function (item) {
-                        
-                        let tripId = item.tripId;
-                        
-                        if (indexedTrips[tripId] === undefined)
-                            indexedTrips[tripId] = [];
+                let tripId = item.tripId;
 
-                        indexedTrips[tripId].push(item);
+                if (indexedTrips[tripId] === undefined)
+                    indexedTrips[tripId] = [];
 
-                    });
+                indexedTrips[tripId].push(item);
 
-                    res.status(200).jsonp(indexedTrips);
+            });
 
-                })
-                .catch(error => {
-                    logger.error(error);
-                    res.status(500).jsonp({success: false, error: error});
-                });
+            res.status(200).jsonp(indexedTrips);
 
         })
         .catch(error => {
-            logger.error(`Error acquiring client: ${error}`);
-
-            utils.respondWithError(res, error);
-            utils.handleError(error);
+            logger.error(error);
+            res.status(500).jsonp({success: false, error: error});
         });
 
 }
