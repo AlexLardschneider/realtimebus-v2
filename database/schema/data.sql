@@ -726,7 +726,7 @@ CREATE TABLE rec_ort (
     ort_pos_laenge bigint,
     ort_pos_breite bigint,
     ort_pos_hoehe bigint,
-    ort_richtung SMALLINT
+    ort_richtung SMALLINT,
     ort_druckname VARCHAR(40),
     richtungswechsel SMALLINT
 );
