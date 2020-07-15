@@ -125,4 +125,28 @@ module.exports = class BusStops {
                 return results.rows;
             });
     }
+    
+    getTrips(tripIds) {
+        
+        return Promise.resolve(`
+            SELECT
+                rf.trip AS "tripId",
+                lv.ort_nr AS "stopId",
+                ro.ort_name AS "stopName",
+                ((rf.departure + COALESCE(tt.travel_time, 0)) * INTERVAL '1 sec')::text AS "arrivalTime",
+                ((rf.departure + COALESCE(tt.travel_time, 0)) * INTERVAL '1 sec')::text AS "departureTime",
+                ST_Y(ST_Transform(ro.the_geom, 4326)) AS "latitude",
+                ST_X(ST_Transform(ro.the_geom, 4326)) AS "longitude"
+            FROM data.rec_frt AS rf
+            INNER JOIN data.lid_verlauf AS lv ON rf.line = lv.line AND rf.variant = lv.variant
+            INNER JOIN data.rec_ort AS ro ON lv.ort_nr = ro.ort_nr
+            LEFT JOIN data.travel_times AS tt ON tt.trip = rf.trip AND tt.li_lfd_nr_end = lv.li_lfd_nr
+            WHERE rf.trip IN ('${tripIds.join("','")}')
+            ORDER BY rf.trip ASC, lv.li_lfd_nr ASC;`
+        )
+        .then(sql => connection.query(sql))
+        .then(results => results.rows);
+        
+    }
+    
 };

@@ -68,7 +68,7 @@ let args = yargs
     .demandCommand()
     .option('verbose', {
         alias: 'v',
-        default: false
+        default: true
     })
     .option('color', {
         alias: 'c',
@@ -93,7 +93,7 @@ app.use(bodyParser.raw({
 
 // <editor-fold desc="ROUTES">
 
-app.use("/vdv/import", expressAuth({users: config.users}));
+//app.use("/vdv/import", expressAuth({users: config.users}));
 app.use("/firebase", expressAuth({users: config.users}));
 
 
@@ -138,6 +138,9 @@ app.group("/geojson", (router) => {
 
     router.get("/lines/all", v1Lines.fetchAllLinesAction);
     router.get("/lines", v1Lines.fetchLinesAction);
+    
+    router.get("/trips/:tripIds", v1Lines.fetchTrips);
+    
 });
 
 app.group("/app", (router) => {
