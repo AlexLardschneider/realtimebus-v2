@@ -68,7 +68,7 @@ let args = yargs
     .demandCommand()
     .option('verbose', {
         alias: 'v',
-        default: true
+        default: false
     })
     .option('color', {
         alias: 'c',
@@ -93,7 +93,7 @@ app.use(bodyParser.raw({
 
 // <editor-fold desc="ROUTES">
 
-//app.use("/vdv/import", expressAuth({users: config.users}));
+app.use("/vdv/import", expressAuth({users: config.users}));
 app.use("/firebase", expressAuth({users: config.users}));
 
 
