@@ -88,6 +88,9 @@ module.exports.fetchTrips = function (req, res) {
         })
         .then(trips => {
 
+            if (trips.length === 0)
+                return [];
+
             let outputFormat = config.coordinate_wgs84;
             let stopFinder = new StopFinder(outputFormat);
 
