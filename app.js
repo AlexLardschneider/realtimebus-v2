@@ -138,6 +138,10 @@ app.group("/geojson", (router) => {
 
     router.get("/lines/all", v1Lines.fetchAllLinesAction);
     router.get("/lines", v1Lines.fetchLinesAction);
+
+    router.get("/trips/:tripIds", v1Lines.fetchTrips);
+    router.get("/stops/:stopIds", v1Stops.fetchStops);
+
 });
 
 app.group("/app", (router) => {

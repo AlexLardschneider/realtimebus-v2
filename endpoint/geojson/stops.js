@@ -113,3 +113,28 @@ module.exports.nextBusesAtStop = function (req, res) {
             res.status(500).jsonp({success: false, error: error})
         })
 };
+
+module.exports.fetchStops = function(req, res) {
+
+    return Promise.resolve()
+        .then(() => {
+
+            let outputFormat = config.coordinate_wgs84;
+
+            let stopIds = req.params.stopIds.split(",");
+            let stopFinder = new StopFinder(outputFormat);
+
+            return stopFinder.getStopsByIds(stopIds)
+
+        })
+        .then(rows => {
+
+            res.status(200).jsonp(rows);
+
+        })
+        .catch(error => {
+            logger.error(error);
+            res.status(500).jsonp({success: false, error: error})
+        });
+
+};

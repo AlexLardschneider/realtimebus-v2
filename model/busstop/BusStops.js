@@ -108,6 +108,22 @@ module.exports = class BusStops {
             });
     }
 
+    getStopsByIds(stopIds) {
+        return Promise.resolve(
+            `SELECT 
+                ro.onr_typ_nr AS type,
+                ro.ort_nr AS id,
+                ro.ort_name AS name,
+                ro.ort_ref_ort_name AS refName,
+                ST_Y(ST_Transform(ro.the_geom, 4326)) AS latitude,
+                ST_X(ST_Transform(ro.the_geom, 4326)) AS longitude
+            FROM data.rec_ort AS ro
+            WHERE ro.ort_nr IN ('${stopIds.join("','")}')`
+        )
+        .then(sql => connection.query(sql))
+        .then(results => results.rows);
+    }
+
     getStopsForApp(tripId, stopIds, timeFrom, timeTo) {
         const reducer = (accumulator, currentValue) => accumulator + ', '  + currentValue;
         return Promise.resolve(`
@@ -125,4 +141,45 @@ module.exports = class BusStops {
                 return results.rows;
             });
     }
+
+    getTrips(tripIds) {
+
+        return Promise.resolve(`
+            SELECT
+                rf.trip AS "tripId",
+                rf.line AS "line",
+                rf.trip_type AS "type",
+                rf.variant AS "variant",
+                rf.service AS "service"
+            FROM data.rec_frt AS rf
+            WHERE rf.trip IN ('${tripIds.join("','")}')
+        `)
+        .then(sql => connection.query(sql))
+        .then(results => results.rows);
+
+    }
+
+    getTripStops(tripIds) {
+
+        return Promise.resolve(`
+            SELECT
+                rf.trip AS "tripId",
+                lv.ort_nr AS "stopId",
+                ro.ort_name AS "stopName",
+                ((rf.departure + COALESCE(tt.travel_time, 0)) * INTERVAL '1 sec')::text AS "arrivalTime",
+                ((rf.departure + COALESCE(tt.travel_time, 0)) * INTERVAL '1 sec')::text AS "departureTime",
+                ST_Y(ST_Transform(ro.the_geom, 4326)) AS "latitude",
+                ST_X(ST_Transform(ro.the_geom, 4326)) AS "longitude"
+            FROM data.rec_frt AS rf
+            INNER JOIN data.lid_verlauf AS lv ON rf.line = lv.line AND rf.variant = lv.variant
+            INNER JOIN data.rec_ort AS ro ON lv.ort_nr = ro.ort_nr
+            LEFT JOIN data.travel_times AS tt ON tt.trip = rf.trip AND tt.li_lfd_nr_end = lv.li_lfd_nr
+            WHERE rf.trip IN ('${tripIds.join("','")}')
+            ORDER BY rf.trip ASC, lv.li_lfd_nr ASC;`
+        )
+        .then(sql => connection.query(sql))
+        .then(results => results.rows);
+
+    }
+
 };
